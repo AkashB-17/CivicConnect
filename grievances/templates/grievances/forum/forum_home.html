@@ -1,0 +1,122 @@
+{% extends 'grievances/base.html' %}
+
+{% block title %}General Discussion Forum - CivicConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>General Discussion Forum</h1>
+            <p class="text-muted">Join the conversation with other community members</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'grievances:create_discussion' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Start New Discussion
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col">
+            <form method="get" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" placeholder="Search discussions..." 
+                       value="{{ search_query }}">
+                <button type="submit" class="btn btn-outline-primary">Search</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Discussions List -->
+    {% if page_obj %}
+        {% for discussion in page_obj %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="card-title">
+                                <a href="{% url 'grievances:discussion_detail' discussion.pk %}" class="text-decoration-none">
+                                    {{ discussion.title }}
+                                </a>
+                            </h5>
+                            <p class="text-muted mb-2">
+                                <small>
+                                    Started by {{ discussion.created_by.username }} on {{ discussion.created_at|date:"F d, Y" }}
+                                </small>
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <div class="mb-1">
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-comment"></i> {{ discussion.replies.count }}
+                                </span>
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-eye"></i> {{ discussion.views }}
+                                </span>
+                            </div>
+                            <small class="text-muted">
+                                Last reply: 
+                                {% if discussion.replies.exists %}
+                                    {{ discussion.replies.last.created_at|date:"F d, Y" }}
+                                {% else %}
+                                    No replies yet
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <nav aria-label="Discussion pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">
+                            &laquo; First
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            Last &raquo;
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-comments fa-3x text-muted"></i>
+            </div>
+            <h3>No Discussions Yet</h3>
+            <p class="text-muted">Be the first to start a discussion!</p>
+            <a href="{% url 'grievances:create_discussion' %}" class="btn btn-primary">
+                Start New Discussion
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

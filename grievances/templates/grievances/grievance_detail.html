@@ -1,0 +1,255 @@
+{% extends 'grievances/base.html' %}
+{% load grievance_extras %}
+
+{% block title %}{{ grievance.title }} - CivicConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-md-8">
+            <!-- Grievance Details Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">{{ grievance.title }}</h2>
+                    <small>
+                        Submitted by {% if grievance.is_anonymous %}Anonymous{% else %}{{ grievance.created_by.username }}{% endif %} 
+                        on {{ grievance.created_at|date:"F d, Y" }}
+                    </small>
+                </div>
+                <div class="card-body">
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h5 class="card-title">Description</h5>
+                        <p class="card-text">{{ grievance.description }}</p>
+                    </div>
+
+                    <!-- Image -->
+                    {% if grievance.image %}
+                    <div class="mb-4">
+                        <h5 class="card-title">Image</h5>
+                        <img src="{{ grievance.image.url }}" class="img-fluid rounded" alt="Grievance image">
+                    </div>
+                    {% endif %}
+
+                    <!-- Attachments -->
+                    {% if grievance.attachments.all %}
+                    <div class="mb-4">
+                        <h5 class="card-title">Attachments</h5>
+                        <div class="row">
+                            {% for attachment in grievance.attachments.all %}
+                            <div class="col-md-4 mb-3">
+                                <img src="{{ attachment.file.url }}" class="img-thumbnail" alt="Attachment">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Details Grid -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h5 class="card-title">Category</h5>
+                                <p class="card-text">{{ grievance.get_category_display }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h5 class="card-title">Status</h5>
+                                <p class="card-text">
+                                    <span class="badge bg-{{ grievance.status|status_color }}">
+                                        {{ grievance.get_status_display }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h5 class="card-title">Location</h5>
+                                <p class="card-text">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ grievance.location }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h5 class="card-title">Assigned To</h5>
+                                <p class="card-text">
+                                    {% if grievance.assigned_to %}
+                                        {{ grievance.assigned_to.username }}
+                                    {% else %}
+                                        Not assigned yet
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Analysis -->
+                    {% if grievance.ai_priority %}
+                    <div class="mt-4">
+                        <h5 class="card-title">AI Analysis</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <strong>Priority:</strong>
+                                    <span class="badge bg-{{ grievance.ai_priority|priority_color }}">
+                                        {{ grievance.ai_priority }}
+                                    </span>
+                                    <small class="text-muted">(Confidence: {{ grievance.ai_priority_confidence|floatformat:2 }})</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <strong>Sentiment Score:</strong>
+                                    <span class="badge bg-{{ grievance.ai_sentiment_score|sentiment_color }}">
+                                        {{ grievance.ai_sentiment_score|floatformat:2 }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Updates Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Updates History</h5>
+                </div>
+                <div class="card-body">
+                    {% if updates %}
+                        {% for update in updates %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <span class="badge bg-{{ update.status.name|status_color }}">
+                                        {{ update.status.get_name_display }}
+                                    </span>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ update.created_at|date:"F d, Y" }} by {{ update.updated_by.username }}
+                                </small>
+                            </div>
+                            <p class="mt-2 mb-0">{{ update.comment }}</p>
+                        </div>
+                        {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No updates yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- AI Response Suggestion (for staff) -->
+            {% if request.user.is_staff and ai_response %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">AI Response Suggestion</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ ai_response }}</p>
+                    <button class="btn btn-primary" onclick="copyToClipboard('{{ ai_response|escapejs }}')">
+                        <i class="fas fa-copy me-1"></i>Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Similar Grievances -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Similar Grievances</h5>
+                </div>
+                <div class="card-body">
+                    {% if similar_grievances %}
+                        {% for similar_grievance, similarity in similar_grievances %}
+                        <div class="mb-3">
+                            <h6>
+                                <a href="{% url 'grievances:grievance_detail' pk=similar_grievance.pk %}" class="text-decoration-none">
+                                    {{ similar_grievance.title }}
+                                </a>
+                            </h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-{{ similar_grievance.status|status_color }}">
+                                    {{ similar_grievance.get_status_display }}
+                                </span>
+                                <small class="text-muted">Similarity: {{ similarity|floatformat:2 }}</small>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No similar grievances found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Status Update Form (for staff) -->
+            {% if request.user.is_staff %}
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Update Status</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'grievances:update_status' pk=grievance.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="status" class="form-label">New Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                {% for status_code, status_name in status_choices %}
+                                <option value="{{ status_code }}" {% if status_code == grievance.status %}selected{% endif %}>
+                                    {{ status_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Comment</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-save me-1"></i>Update Status
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.badge {
+    font-weight: 500;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Response copied to clipboard!');
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+{% endblock %} 

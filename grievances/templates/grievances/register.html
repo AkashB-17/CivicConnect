@@ -1,0 +1,201 @@
+{% extends 'grievances/base.html' %}
+{% load static %}
+
+{% block title %}Register - Civic Connect{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>Create an Account</h2>
+        {% if request.GET.next == '/submit/' %}
+            <div class="info-message">
+                <p>You need to create an account and verify your email before submitting a grievance.</p>
+            </div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="is_admin" id="is_admin" value="0">
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="username">Username</label>
+                {{ form.username }}
+                {% if form.username.help_text %}
+                    <small class="form-text text-muted">{{ form.username.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                {{ form.email }}
+            </div>
+
+            <div class="form-group">
+                <label for="password1">Password</label>
+                {{ form.password1 }}
+                {% if form.password1.help_text %}
+                    <small class="form-text text-muted">{{ form.password1.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="password2">Confirm Password</label>
+                {{ form.password2 }}
+                {% if form.password2.help_text %}
+                    <small class="form-text text-muted">{{ form.password2.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="submit-btn">Register</button>
+            <button type="button" class="admin-btn" onclick="registerAsAdmin()">Register as Administrator</button>
+        </form>
+        <div class="auth-links">
+            <p>Already have an account? <a href="{% url 'grievances:login' %}">Login here</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+function registerAsAdmin() {
+    document.getElementById('is_admin').value = '1';
+    document.querySelector('form').submit();
+}
+</script>
+
+<style>
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 200px);
+}
+
+.auth-box {
+    background: var(--box-bg);
+    padding: 30px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--border-color);
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--text-color);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-color);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background: var(--input-bg);
+    color: var(--text-color);
+}
+
+.form-text {
+    font-size: 0.875em;
+    color: var(--link-color);
+    margin-top: 5px;
+}
+
+.info-message {
+    background-color: rgba(0, 123, 255, 0.1);
+    border: 1px solid #007bff;
+    color: var(--text-color);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.alert ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--nav-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    color: var(--text-color);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+}
+
+.submit-btn:hover {
+    background: var(--input-bg);
+}
+
+.admin-btn {
+    width: 100%;
+    padding: 12px;
+    background: #dc3545;
+    border: 1px solid #c82333;
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.admin-btn:hover {
+    background: #c82333;
+}
+
+.auth-links {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.auth-links p {
+    color: var(--text-color);
+}
+
+.auth-links a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+.auth-links a:hover {
+    color: var(--link-hover);
+}
+</style>
+{% endblock %} 

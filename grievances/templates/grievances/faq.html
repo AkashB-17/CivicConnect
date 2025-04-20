@@ -1,0 +1,177 @@
+{% extends 'grievances/base.html' %}
+{% load static %}
+
+{% block title %}FAQ - Civic Connect{% endblock %}
+
+{% block content %}
+<div class="faq-container">
+    <h1>Frequently Asked Questions</h1>
+    
+    <div class="faq-section">
+        <div class="faq-item">
+            <div class="faq-question">
+                How do I submit a grievance?
+            </div>
+            <div class="faq-answer">
+                To submit a grievance, click on the "Create New Post" button from the homepage or use the sidebar icon. Fill out the required information including title, category, description, and location. You can also attach relevant documents or images to support your grievance.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                How long does it take to get a response?
+            </div>
+            <div class="faq-answer">
+                Response times vary depending on the nature and urgency of the grievance. Typically, you should receive an initial acknowledgment within 24-48 hours, and a more detailed response within 5-7 working days.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                Can I track the status of my grievance?
+            </div>
+            <div class="faq-answer">
+                Yes, you can track your grievance status by logging into your account and visiting the "My Posts" section. Each grievance will show its current status and any updates from the authorities.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                What types of issues can I report?
+            </div>
+            <div class="faq-answer">
+                You can report various civic issues including but not limited to:
+                <ul>
+                    <li>Infrastructure problems (roads, bridges, buildings)</li>
+                    <li>Sanitation issues</li>
+                    <li>Public safety concerns</li>
+                    <li>Educational facility issues</li>
+                    <li>Healthcare-related concerns</li>
+                    <li>Environmental problems</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                Is my personal information secure?
+            </div>
+            <div class="faq-answer">
+                Yes, we take data privacy seriously. Your personal information is encrypted and only used for communication regarding your grievances. We never share your information with third parties without your consent.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                Can I submit anonymous grievances?
+            </div>
+            <div class="faq-answer">
+                While you can submit anonymous grievances, we recommend creating an account and identifying yourself to receive updates and responses to your submissions. This also helps in following up on your grievances effectively.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.faq-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.faq-container h1 {
+    text-align: center;
+    margin-bottom: 40px;
+    color: var(--text-color);
+}
+
+.faq-section {
+    background: var(--box-bg);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.faq-item {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.faq-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.faq-question {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--text-color);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.faq-question:hover {
+    background: var(--input-bg);
+}
+
+.faq-answer {
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 0 10px;
+    opacity: 0.8;
+}
+
+.faq-answer ul {
+    margin-top: 10px;
+    margin-left: 20px;
+    list-style-type: disc;
+}
+
+.faq-answer li {
+    margin-bottom: 5px;
+    color: var(--text-color);
+}
+
+@media (max-width: 768px) {
+    .faq-container {
+        padding: 10px;
+    }
+    
+    .faq-question {
+        font-size: 1.1em;
+    }
+}
+</style>
+
+<script>
+document.querySelectorAll('.faq-question').forEach(question => {
+    question.addEventListener('click', () => {
+        const answer = question.nextElementSibling;
+        const isHidden = answer.style.display === 'none';
+        
+        // Reset all questions and answers
+        document.querySelectorAll('.faq-answer').forEach(a => {
+            a.style.display = 'none';
+        });
+        document.querySelectorAll('.faq-question').forEach(q => {
+            q.style.backgroundColor = '';
+        });
+        
+        if (isHidden) {
+            answer.style.display = 'block';
+            question.style.backgroundColor = 'var(--input-bg)';
+        }
+    });
+});
+
+// Show first answer by default
+document.querySelector('.faq-answer').style.display = 'block';
+document.querySelector('.faq-question').style.backgroundColor = 'var(--input-bg)';
+</script>
+{% endblock %} 

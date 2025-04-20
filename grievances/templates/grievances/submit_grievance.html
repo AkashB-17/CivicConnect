@@ -1,0 +1,129 @@
+{% extends 'grievances/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Submit Grievance - CivicConnect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-center">Submit a New Grievance</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <!-- Location Map -->
+                    <div class="mb-3">
+                        <label class="form-label">Select Location on Map</label>
+                        <div id="map" style="height: 300px; width: 100%;" class="border rounded mb-2"></div>
+                        <small class="text-muted">Click on the map to select a location or enter the address manually above.</small>
+                    </div>
+                    
+                    <!-- Image Preview -->
+                    <div class="mb-3">
+                        <label class="form-label">Image Preview</label>
+                        <div id="imagePreview" class="border rounded p-2" style="min-height: 200px;">
+                            <div class="row" id="previewContainer">
+                                <p class="text-muted text-center">No images selected</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Submit Grievance</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+    // Initialize map
+    let map = L.map('map').setView([20.5937, 78.9629], 5); // Default to India
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker = null;
+
+    // Update location when map is clicked
+    map.on('click', function(e) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        marker = L.marker(e.latlng).addTo(map);
+        
+        // Set latitude and longitude
+        document.getElementById('id_latitude').value = e.latlng.lat;
+        document.getElementById('id_longitude').value = e.latlng.lng;
+        
+        // Reverse geocoding to get address
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('id_location').value = data.display_name;
+            });
+    });
+
+    // Update map when location input changes
+    document.getElementById('id_location').addEventListener('change', function() {
+        const location = this.value;
+        if (location) {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lon = parseFloat(data[0].lon);
+                        map.setView([lat, lon], 15);
+                        if (marker) {
+                            map.removeLayer(marker);
+                        }
+                        marker = L.marker([lat, lon]).addTo(map);
+                    }
+                });
+        }
+    });
+
+    // Image Preview
+    document.getElementById('id_attachments').addEventListener('change', function(e) {
+        const previewContainer = document.getElementById('previewContainer');
+        previewContainer.innerHTML = ''; // Clear previous previews
+        
+        if (this.files.length > 0) {
+            for (let i = 0; i < this.files.length; i++) {
+                const file = this.files[i];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    const col = document.createElement('div');
+                    col.className = 'col-md-4 mb-2';
+                    
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-fluid rounded';
+                        img.style.maxHeight = '200px';
+                        col.appendChild(img);
+                    }
+                    
+                    reader.readAsDataURL(file);
+                    previewContainer.appendChild(col);
+                }
+            }
+        } else {
+            previewContainer.innerHTML = '<p class="text-muted text-center">No images selected</p>';
+        }
+    });
+</script>
+{% endblock %} 

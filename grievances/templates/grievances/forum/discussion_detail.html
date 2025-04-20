@@ -1,0 +1,164 @@
+{% extends 'grievances/base.html' %}
+
+{% block title %}{{ discussion.title }} - CivicConnect Forum{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Discussion Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'grievances:forum_home' %}">Forum</a></li>
+                <li class="breadcrumb-item active">{{ discussion.title }}</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Main Discussion -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h1 class="card-title h3">{{ discussion.title }}</h1>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="text-muted">
+                    <small>
+                        Posted by {{ discussion.created_by.username }} on {{ discussion.created_at|date:"F d, Y" }}
+                    </small>
+                </div>
+                <div>
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-eye"></i> {{ discussion.views }} views
+                    </span>
+                    <span class="badge bg-primary like-badge" data-id="{{ discussion.id }}" data-type="discussion">
+                        <i class="fas fa-heart"></i> <span class="likes-count">{{ discussion.likes.count }}</span> likes
+                    </span>
+                </div>
+            </div>
+            <div class="discussion-content mb-3">
+                {{ discussion.content|linebreaks }}
+            </div>
+            <button class="btn btn-sm btn-outline-primary like-btn" 
+                    data-id="{{ discussion.id }}" 
+                    data-type="discussion"
+                    {% if user in discussion.likes.all %}data-liked="true"{% endif %}>
+                <i class="fas {% if user in discussion.likes.all %}fa-heart{% else %}fa-heart-o{% endif %}"></i>
+                Like
+            </button>
+        </div>
+    </div>
+
+    <!-- Replies Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Replies ({{ discussion.replies.count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if page_obj %}
+                {% for reply in page_obj %}
+                    <div class="reply-item mb-4 {% if not forloop.last %}border-bottom pb-4{% endif %}">
+                        <div class="d-flex justify-content-between">
+                            <div class="reply-header">
+                                <strong>{{ reply.created_by.username }}</strong>
+                                <small class="text-muted">{{ reply.created_at|date:"F d, Y" }}</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary like-btn" 
+                                        data-id="{{ reply.id }}" 
+                                        data-type="reply"
+                                        {% if user in reply.likes.all %}data-liked="true"{% endif %}>
+                                    <i class="fas {% if user in reply.likes.all %}fa-heart{% else %}fa-heart-o{% endif %}"></i>
+                                    <span class="likes-count">{{ reply.likes.count }}</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="reply-content mt-2">
+                            {{ reply.content|linebreaks }}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- Pagination for replies -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav aria-label="Reply pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">&laquo; First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <p class="text-muted">No replies yet. Be the first to reply!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Reply Form -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Post a Reply</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <textarea name="content" class="form-control" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Post Reply</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('.like-btn').click(function() {
+        var btn = $(this);
+        var type = btn.data('type');
+        var id = btn.data('id');
+        
+        $.ajax({
+            url: '{% url "grievances:toggle_like" %}',
+            type: 'POST',
+            data: {
+                'type': type,
+                'id': id,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(data) {
+                var icon = btn.find('i');
+                if (data.liked) {
+                    icon.removeClass('fa-heart-o').addClass('fa-heart');
+                    btn.attr('data-liked', 'true');
+                } else {
+                    icon.removeClass('fa-heart').addClass('fa-heart-o');
+                    btn.attr('data-liked', 'false');
+                }
+                btn.find('.likes-count').text(data.likes_count);
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

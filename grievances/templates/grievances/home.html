@@ -1,0 +1,227 @@
+{% extends 'grievances/base.html' %}
+{% load grievance_extras %}
+
+{% block title %}Home - CivicConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto text-center">
+            <h1 class="display-4 mb-3">Welcome to CivicConnect</h1>
+            <p class="lead mb-4">Your platform for reporting and tracking civic issues in your community.</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'grievances:submit_grievance' %}" class="btn btn-primary btn-lg">Submit a Grievance</a>
+            {% else %}
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="{% url 'grievances:login' %}" class="btn btn-primary btn-lg px-4 me-sm-3">Login</a>
+                    <a href="{% url 'grievances:register' %}" class="btn btn-outline-primary btn-lg px-4">Register</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="d-flex">
+                        {{ form.query }}
+                        <button type="submit" class="btn btn-primary ms-2">Search</button>
+                    </form>
+                    {% if request.GET.query %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Showing results for: "{{ request.GET.query }}"
+                                {% if page_obj.paginator.count > 0 %}
+                                    ({{ page_obj.paginator.count }} results found)
+                                {% endif %}
+                            </small>
+                            {% if enhanced_terms %}
+                                <div class="mt-1">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Also searching for related terms: 
+                                        {% for term in enhanced_terms %}
+                                            <span class="badge bg-light text-dark me-1">{{ term }}</span>
+                                        {% endfor %}
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Grievances List -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h3 mb-0">
+                    {% if is_search %}
+                        Search Results
+                    {% else %}
+                        Recent Grievances
+                    {% endif %}
+                </h2>
+                {% if page_obj %}
+                    <small class="text-muted">Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}</small>
+                {% endif %}
+            </div>
+
+            {% if page_obj %}
+                <div class="row">
+                    {% for grievance in page_obj %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            {% if grievance.image %}
+                            <img src="{{ grievance.image.url }}" class="card-img-top" alt="{{ grievance.title }}">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="{% url 'grievances:grievance_detail' grievance.pk %}" class="text-decoration-none">
+                                        {{ grievance.title }}
+                                    </a>
+                                </h5>
+                                <p class="card-text text-muted">
+                                    {{ grievance.description|truncatewords:30 }}
+                                </p>
+                                <div class="mb-3">
+                                    <span class="badge bg-{{ grievance.status|status_color }} me-2">
+                                        {{ grievance.status }}
+                                    </span>
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ grievance.location }}
+                                    </small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ grievance.created_at|date:"M d, Y" }}</small>
+                                    <a href="{% url 'grievances:grievance_detail' grievance.pk %}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">&laquo;</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}">&raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-search fa-3x text-muted"></i>
+                    </div>
+                    <h3>No Grievances Found</h3>
+                    <p class="text-muted">
+                        {% if is_search %}
+                            Try adjusting your search terms or browse all grievances.
+                        {% else %}
+                            There are no grievances to display.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Stats Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Stats</h5>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h3 class="mb-1">{{ page_obj.paginator.count }}</h3>
+                            <small class="text-muted">Total Grievances</small>
+                        </div>
+                        {% if user.is_authenticated %}
+                        <div class="col-6">
+                            <h3 class="mb-1">{{ user.created_grievances.count }}</h3>
+                            <small class="text-muted">Your Grievances</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_grievances %}
+                        {% for grievance in recent_grievances|slice:":5" %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">
+                                    <a href="{% url 'grievances:grievance_detail' grievance.pk %}" class="text-decoration-none">{{ grievance.title }}</a>
+                                </h6>
+                                <small class="text-muted">{{ grievance.created_at|date:"M d, Y" }}</small>
+                            </div>
+                            <span class="badge bg-{{ grievance.status|status_color }}">{{ grievance.status }}</span>
+                        </div>
+                        {% if not forloop.last %}<hr class="my-2">{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">No recent activity.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.badge {
+    font-weight: 500;
+}
+.hero-section {
+    background: var(--bg-color);
+    padding: 4rem 0;
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %}
+

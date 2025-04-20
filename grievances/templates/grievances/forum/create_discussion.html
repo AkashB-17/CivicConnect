@@ -1,0 +1,61 @@
+{% extends 'grievances/base.html' %}
+
+{% block title %}Start New Discussion - CivicConnect Forum{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'grievances:forum_home' %}">Forum</a></li>
+                    <li class="breadcrumb-item active">Start New Discussion</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h3 mb-0">Start New Discussion</h1>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required
+                                   placeholder="Enter a descriptive title">
+                            <div class="form-text">Make your title clear and specific</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Content</label>
+                            <textarea class="form-control" id="content" name="content" rows="8" required
+                                      placeholder="Share your thoughts..."></textarea>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="submit" class="btn btn-primary">Create Discussion</button>
+                            <a href="{% url 'grievances:forum_home' %}" class="btn btn-link">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add character counter for title
+    $('#title').on('input', function() {
+        var maxLength = 200;
+        var remaining = maxLength - $(this).val().length;
+        if (remaining < 0) {
+            $(this).val($(this).val().substring(0, maxLength));
+            remaining = 0;
+        }
+        $(this).next('.form-text').text(remaining + ' characters remaining');
+    });
+});
+</script>
+{% endblock %} 
